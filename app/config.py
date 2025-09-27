@@ -17,7 +17,7 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 LOG_DIR = "logs"
 TEMP_FOLDER_NAME = "temp"
 MODEL_NAME = "gemini-2.5-flash-image-preview"
-TEMPERATURE = 2.0
+TEMPERATURE = 1.0
 GENERATED_IMG_PATH = Path("data")
 
 # Prompt

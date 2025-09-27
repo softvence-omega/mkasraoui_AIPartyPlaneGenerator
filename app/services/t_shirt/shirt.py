@@ -1,7 +1,8 @@
 from google import genai
 from google.genai.types import GenerateContentConfig, Modality
 from typing import Optional
-
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from google.api_core.exceptions import ServiceUnavailable
 
 from app.utils.logger import get_logger
 from app.utils.helper import upload_image
@@ -43,6 +44,17 @@ class TShirt:
             logger.error(f"Error in model client: {e}")
             raise e
 
+    @retry(
+        stop = stop_after_attempt(3),
+        wait = wait_exponential(multiplier = 1, min = 4, max = 10),
+        retry = retry_if_exception_type(ServiceUnavailable)
+    )
+    def _make_api_call(self, client, model, contents, config):
+        return client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=config
+        )
 
     ## T-Shirt Design
     def generate_shirt_design(self, ref_img_path : Optional[str] = None):
@@ -72,11 +84,12 @@ class TShirt:
             logger.info("Generating t-shirt design...")
             client, config = self.model_client()
 
-            response = client.models.generate_content(
-                model=MODEL_NAME,
-                contents=t_shirt_content,
-                config=config
-            )
+            # response = client.models.generate_content(
+            #     model=MODEL_NAME,
+            #     contents=t_shirt_content,
+            #     config=config
+            # )
+            response = self._make_api_call(client, MODEL_NAME, t_shirt_content, config)
             logger.info("T-shirt design generated successfully.")
             return response
         except Exception as e:
@@ -99,11 +112,13 @@ class TShirt:
             logger.info("Generating t-shirt mockup...")
             client, config = self.model_client()
 
-            response = client.models.generate_content(
-                model=MODEL_NAME,
-                contents=t_shirt_mockup_content,
-                config=config
-            )
+            # response = client.models.generate_content(
+            #     model=MODEL_NAME,
+            #     contents=t_shirt_mockup_content,
+            #     config=config
+            # )
+            response = self._make_api_call(
+                client, MODEL_NAME, t_shirt_mockup_content, config)
             logger.info("T-shirt mockup generated successfully.")
             return response
         except Exception as e:

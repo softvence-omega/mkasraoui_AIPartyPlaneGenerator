@@ -78,6 +78,8 @@ async def t_shirt_generate(
             generated_mockup_url = cloudinary_file_upload(response_data_img(response_m))
             print("Mockup Generated.")
 
+            await asyncio.sleep(1)
+
             background_task.add_task(delete_file, TEMP_FOLDER_NAME)
 
             return JSONResponse(
