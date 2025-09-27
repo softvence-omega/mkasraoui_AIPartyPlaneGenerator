@@ -5,6 +5,7 @@ import mimetypes
 import json
 import cloudinary
 from cloudinary.uploader import upload
+import shutil
 
 from app.config import CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_SECRET, GENERATED_IMG_PATH
 
@@ -59,3 +60,7 @@ def load_json(json_data, JsonOpject):
         return obj
     except Exception as e:
         raise ValueError(str(e))
+
+def delete_file(file_path):
+    if os.path.exists(file_path):
+        shutil.rmtree(file_path)

@@ -1,13 +1,11 @@
 from google import genai
 from google.genai.types import GenerateContentConfig, Modality
+from typing import Optional
 
 
 from app.utils.logger import get_logger
 from app.utils.helper import upload_image
 from app.config import IMAGE_ANALYSIS_PROMPT, GEMINI_API_KEY, MODEL_NAME, TEMPERATURE, SHIRT_MOCKUP_PROMPT
-
-
-
 
 logger = get_logger(__name__)
 
@@ -47,16 +45,28 @@ class TShirt:
 
 
     ## T-Shirt Design
-    def generate_shirt_design(self, ref_img_path):
+    def generate_shirt_design(self, ref_img_path : Optional[str] = None):
         try:
-            t_shirt_content = [
-                {
-                    "parts": [
-                        {"inline_data": upload_image(ref_img_path)},
-                        {"text": IMAGE_ANALYSIS_PROMPT.format(tshirt_type=self.tshirt_type, gender=self.gender, age=self.age, theme=self.theme, message=self.message, color=self.color)}
-                    ]
-                }
-            ]
+
+            if ref_img_path:
+                logger.info("Uploading reference image...")
+                t_shirt_content = [
+                    {
+                        "parts": [
+                            {"inline_data": upload_image(ref_img_path)},
+                            {"text": IMAGE_ANALYSIS_PROMPT.format(tshirt_type=self.tshirt_type, gender=self.gender, age=self.age, theme=self.theme, message=self.message, color=self.color)}
+                        ]
+                    }
+                ]
+            else:
+                logger.info("No reference image provided.")
+                t_shirt_content = [
+                    {
+                        "parts": [
+                            {"text": IMAGE_ANALYSIS_PROMPT.format(tshirt_type=self.tshirt_type, gender=self.gender, age=self.age, theme=self.theme, message=self.message, color=self.color)}
+                        ]
+                    }
+                ]
 
             ## Model
             logger.info("Generating t-shirt design...")

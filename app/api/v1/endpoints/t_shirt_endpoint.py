@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import Optional
 import shutil
@@ -7,17 +7,14 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from google.genai.errors import ServerError
 import asyncio
 
-from app.schemas.schema import Shirt
-from app.utils.helper import load_json
 from app.config import TEMP_FOLDER_NAME
 from app.services.t_shirt.shirt import TShirt
-from app.utils.helper import response_data_img
+from app.utils.helper import response_data_img, delete_file
 from app.utils.helper import cloudinary_file_upload
 from app.utils.logger import get_logger
 
 
 logger = get_logger(__name__)
-
 
 
 router = APIRouter()
@@ -40,7 +37,8 @@ async def t_shirt_generate(
     age: int = Form(..., description="Age of the target wearer (used for style/fit adjustments)"),
     t_shirt_theme: str = Form(..., description="Theme or style of the t-shirt (e.g., birthday, sports, cartoon)"),
     optional_description: Optional[str] = Form(None, description="Additional description to refine the design (optional)"),
-    img_file: Optional[UploadFile] = File(None, description="Optional image file to include in the t-shirt design")
+    img_file: Optional[UploadFile] = File(None, description="Optional image file to include in the t-shirt design"),
+    background_task : BackgroundTasks = None
 ):
 
     t_shirt = TShirt(
@@ -80,14 +78,34 @@ async def t_shirt_generate(
             generated_mockup_url = cloudinary_file_upload(response_data_img(response_m))
             print("Mockup Generated.")
 
+            background_task.add_task(delete_file, TEMP_FOLDER_NAME)
+
+            return JSONResponse(
+                content={"generated_design_url": generated_design_url, "generated_mockup_url" : generated_mockup_url})
+
+        except FileNotFoundError:
+            raise HTTPException(status_code=400, detail = "File not found.")
+    else:
+        try:
+
+            print("Generating Image......")
+            response_d = t_shirt.generate_shirt_design(None)
+            img_path = response_data_img(response_d)
+            generated_design_url = cloudinary_file_upload(img_path)
+            print("Image Generated")
+
+            await asyncio.sleep(2)
+
+            print("Generating Mockup......")
+            response_m = t_shirt.generate_shirt_mockup(img_path)
+            generated_mockup_url = cloudinary_file_upload(response_data_img(response_m))
+            print("Mockup Generated.")
+
             return JSONResponse(
                 content={"generated_design_url": generated_design_url, "generated_mockup_url" : generated_mockup_url})
 
         except FileNotFoundError:
             raise HTTPException(status_code=400, detail = "File not found.")
 
-    return JSONResponse(content={
-        "Error": "Something Went Wrong!"
-    })
 
 

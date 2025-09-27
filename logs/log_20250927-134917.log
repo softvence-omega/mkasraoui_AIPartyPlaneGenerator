@@ -1,7 +1,0 @@
-2025-09-27 13:49:44 - app.services.t_shirt.shirt - INFO - Generating t-shirt design...
-2025-09-27 13:49:44 - app.services.t_shirt.shirt - INFO - Initializing model client...
-2025-09-27 13:49:44 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
-2025-09-27 13:49:57 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent "HTTP/1.1 200 OK"
-2025-09-27 13:49:59 - google_genai.models - INFO - AFC remote call 1 is done.
-2025-09-27 13:49:59 - app.services.t_shirt.shirt - INFO - T-shirt design generated successfully.
-2025-09-27 13:50:04 - app.services.t_shirt.shirt - ERROR - Error in shirt mockup: [Errno 22] Invalid argument: 'https://res.cloudinary.com/dsidrlbgn/image/upload/v1758959404/generated_images/fahjmqj08cw2i8ugousv.png'
