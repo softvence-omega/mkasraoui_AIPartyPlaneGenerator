@@ -1,11 +1,12 @@
-# app/main.py
 from fastapi import FastAPI
+
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn as uv
 from app.api.v1.endpoints import generate_card
+from app.api.v1.endpoints import t_shirt_endpoint
 
-app = FastAPI(title="Birthday Invitation API")
+app = FastAPI()
 
-# Enable CORS for dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +16,9 @@ app.add_middleware(
 )
 
 app.include_router(generate_card.router)
+app.include_router(t_shirt_endpoint.router)
+
+
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uv.run("main:app", host="127.0.0.1", port=8000, reload = True)

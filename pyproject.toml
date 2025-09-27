@@ -1,0 +1,25 @@
+[project]
+name = "party-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "cloudinary>=1.44.1",
+    "fastapi>=0.117.1",
+    "google>=3.0.0",
+    "google-api-core>=2.25.1",
+    "google-genai>=1.39.1",
+    "google-generativeai>=0.8.5",
+    "ipywidgets>=8.1.7",
+    "onnxruntime>=1.23.0",
+    "pillow>=11.3.0",
+    "pip>=25.2",
+    "pydantic>=2.11.9",
+    "python-dotenv>=1.1.1",
+    "python-multipart>=0.0.20",
+    "rembg>=2.0.67",
+    "streamlit>=1.50.0",
+    "tenacity>=9.1.2",
+    "uvicorn>=0.37.0",
+]
