@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class InvitationRequest(BaseModel):
-    theme: Optional[str] = Field(None, example="AI Engineer")
-    description: Optional[str] = Field(None, example="AI with cake vibe.")
-    age: Optional[int] = Field(None, example=25)
+    theme: Optional[str] = Field(None, example="Football lover")
+    description: Optional[str] = Field(None, example="Playing a boy football with cake.")
+    age: Optional[int] = Field(None, example=10)
     gender: Optional[str] = Field(None, example="Male")
     birthday_person_name: str = Field(..., example="Prinom")
     venue: Optional[str] = Field(None, example="Party Hall")
