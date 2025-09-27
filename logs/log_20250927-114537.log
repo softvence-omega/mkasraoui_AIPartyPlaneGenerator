@@ -1,0 +1,6 @@
+2025-09-27 11:45:37 - app.services.t_shirt.shirt - INFO - Generating t-shirt design...
+2025-09-27 11:45:37 - app.services.t_shirt.shirt - INFO - Initializing model client...
+2025-09-27 11:45:38 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-09-27 11:45:53 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent "HTTP/1.1 200 OK"
+2025-09-27 11:45:57 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-09-27 11:45:57 - app.services.t_shirt.shirt - INFO - T-shirt design generated successfully.

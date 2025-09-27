@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.idea
+
+# Virtual environments
+.venv
+.env
+
+# Folders
+temp/
+notebook
+
+uv.lock
+
