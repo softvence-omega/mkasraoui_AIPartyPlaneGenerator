@@ -1,0 +1,15 @@
+python-dotenv
+google-genai
+pillow
+python-dotenv
+rembg
+onnxruntime
+fastapi
+uvicorn
+pydantic
+python-multipart
+cloudinary
+tenacity
+google
+google-api-core
+google-generativeai
