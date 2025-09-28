@@ -93,7 +93,7 @@ def filter_data(data, price):
             "price": item["price"]
         }
         for item in data["gifts"]
-        if item["price"] <=price
+        if item["price"] <= price
     ]
     return filtered_items
 

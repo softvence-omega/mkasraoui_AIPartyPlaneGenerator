@@ -38,6 +38,7 @@ MODEL_NAME = "gemini-2.5-flash-image-preview"
 PRODUCT_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 1.0
 GENERATED_IMG_PATH = Path("data")
+PRODUCT_API = "https://mkasraoui-server.onrender.com/products"
 
 # Prompt
 IMAGE_ANALYSIS_PROMPT = """
@@ -76,13 +77,18 @@ IMAGE_ANALYSIS_PROMPT = """
     - The output must be a **standalone design/artwork only**, ready for printing.
     - Artwork must have a **transparent background**.
     - The design should be centered, isolated, and optimized for **fabric printing**.
+    - **Never invent random placeholder names (e.g., Nick, John, Mary).**
+    - If `{message}` is provided, interpret its meaning and integrate it into the artwork appropriately:
+    - If it is a greeting (e.g., “Happy Birthday Sarah!”), render it as festive text in the design.
+    - If it is descriptive (e.g., “I want red balloons” / “Make it adventurous with mountains”), integrate those visual elements into the artwork instead of just adding the words.
+    - If `{message}` is not provided, infer a short, festive, context-appropriate birthday greeting or decoration idea from the uploaded image, theme, age, or celebration style.
 
     Dynamic Parameters:
     - T-shirt type: {tshirt_type} (e.g., child, adult)
     - Gender: {gender}
     - Age: {age}
     - Theme: {theme} (e.g., pirate, princess, superhero, fantasy, sports)
-    - Optional message: {message} (e.g., "Happy Birthday Nick!", "Adventure Awaits", etc.)
+    - Optional message: {message}
 
     Birthday-Specific Requirements:
     - The artwork must clearly feel like it belongs to a **birthday celebration**.

@@ -17,7 +17,7 @@ class PartyDetails(BaseModel):
 class PartyInput(BaseModel):
     person_name: str
     person_age: int
-    budget: float
+    budget: float = 1000
     num_guests: int
     party_date: str
     location: str
