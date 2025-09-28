@@ -27,7 +27,6 @@ async def party_generate(party_input : PartyData):
     )
 
     party_plan = PartyPlanGenerator()
-
     # Fetch the data
     print("Fetching Data.....")
     product = request_product(URL)
