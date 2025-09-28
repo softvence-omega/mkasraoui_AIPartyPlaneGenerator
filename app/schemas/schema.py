@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
-
-
+from typing import Optional, List
 
 class Shirt(BaseModel):
     t_shirt_type : str = "Type of shirt"
@@ -12,4 +10,16 @@ class Shirt(BaseModel):
     t_shirt_theme : str = "Theme of shirt"
     optional_description : Optional[str] = None
 
+class PartyDetails(BaseModel):
+    theme: str
+    favorite_activities: List[str]
+
+class PartyInput(BaseModel):
+    person_name: str
+    person_age: int
+    budget: float
+    num_guests: int
+    party_date: str
+    location: str
+    party_details: PartyDetails
 

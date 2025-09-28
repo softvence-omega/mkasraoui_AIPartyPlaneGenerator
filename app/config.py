@@ -35,6 +35,7 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 LOG_DIR = "logs"
 TEMP_FOLDER_NAME = "temp"
 MODEL_NAME = "gemini-2.5-flash-image-preview"
+PRODUCT_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 1.0
 GENERATED_IMG_PATH = Path("data")
 
@@ -108,6 +109,58 @@ SHIRT_MOCKUP_PROMPT = """
     - Present the mockup in a clean, professional product-photo style, suitable for an online store showcase.
 
     ⚠️ Only generate the mockup of the t-shirt with the uploaded image printed — do not include duplicate designs, separate posters, or additional product variations.
+    """
+
+
+PARTY_PLANNER_PROMPT = """
+        You are an AI party planner. Generate a birthday party plan based on:
+        Name: {person_name}, Age: {person_age}, Budget: ${budget},
+        Guests: {num_guests}, Date: {party_date}, Location: {location},
+        Theme: {theme}, Favorite Activities: {favorite_activities}
+    
+        Return JSON with emojis like below, and include these gift suggestions in "🎁 Suggested Gifts":
+    
+        {{
+        "🎨 Theme & Decorations": ["bullet point instructions"],
+        "🎉 Fun Activities": ["list of activities"],
+        "🍔 Food & Treats": ["list of food items"],
+        "🛍️ Party Supplies": ["list of supplies"],
+        "⏰ Party Timeline": ["timeline steps with emojis"],
+        "🎁 Suggested Gifts": ["list of gift names only"],
+        "🌟 New Adventure Ideas": ["list of adventure/fun ideas"]
+        }}
+    """
+
+
+PRODUCT_PROMPT = """
+    You are an assistant that selects products from a given product JSON based on a suggested gifts list.
+
+    ### Instructions:
+    1. Carefully read the provided `product_json`.
+    2. Read the `suggested_gifts` list.
+    3. Compare each product against the `suggested_gifts` and **rank them by relevance/similarity**.
+       - Consider title, description, theme, and any other relevant attributes.
+    4. Return ONLY the `id` values of the top {top_n} most relevant products.
+    5. If fewer than {top_n} products match, return only the available ones.
+    6. Output must be in **valid JSON format** with this structure:
+    {{
+      "product_ids": ["id1", "id2", ... up to {top_n}]
+    }}
+
+    ⚠️ Rules:
+    - Do not return any extra explanation or text.
+    - If no product matches, return:
+    {{
+      "product_ids": []
+    }}
+
+    ---
+
+    ### product_json:
+    {product_json}
+
+    ### suggested_gifts:
+    {suggested_gifts}
     """
 
 

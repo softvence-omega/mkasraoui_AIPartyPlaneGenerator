@@ -6,6 +6,7 @@ import json
 import cloudinary
 from cloudinary.uploader import upload
 import shutil
+import requests
 
 from app.config import CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_SECRET, GENERATED_IMG_PATH
 
@@ -64,3 +65,35 @@ def load_json(json_data, JsonOpject):
 def delete_file(file_path):
     if os.path.exists(file_path):
         shutil.rmtree(file_path)
+
+
+
+def request_product(url):
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        product = response.json()
+        return product
+    else:
+        raise ValueError(f"Failed to fetch product. Status code: {response.status_code}")
+
+
+
+def filter_data(data, price):
+
+    filtered_items = [
+        {
+            "id" : item["id"],
+            "title": item["title"],
+            "description": item["description"],
+            "product_type": item["product_type"],
+            "age_range": item["age_range"],
+            "avg_rating": item["avg_rating"],
+            "theme": item["theme"],
+            "price": item["price"]
+        }
+        for item in data["gifts"]
+        if item["price"] <=price
+    ]
+    return filtered_items
+
