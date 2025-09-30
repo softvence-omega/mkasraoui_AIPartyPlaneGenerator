@@ -5,6 +5,7 @@ python-dotenv
 rembg
 onnxruntime
 fastapi
+fastapi-utilities
 uvicorn
 pydantic
 python-multipart

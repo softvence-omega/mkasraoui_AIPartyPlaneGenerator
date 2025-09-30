@@ -1,9 +1,8 @@
 from fastapi import FastAPI
+from fastapi_utilities.repeat import repeat_every
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn as uv
-import asyncio
-
 
 from app.api.v1.endpoints import generate_card
 from app.api.v1.endpoints import t_shirt_endpoint
@@ -12,17 +11,26 @@ from app.utils.helper import request_product
 from app.config import PRODUCT_API
 
 
+@repeat_every(seconds=3600, wait_first=True)  # Refresh every hour
+async def refresh_product_data(app : FastAPI):
+    print("Refreshing product data...")
+    try:
+        product = request_product(PRODUCT_API)
+        app.state.product_data = product
+        return product
+    except Exception as e:
+        print("Error refreshing product data:", e)
+        app.state.product_data = []
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application startup...")
     try:
-        print("Loading Product.....")
-        product = request_product(PRODUCT_API)
-        app.state.product_data = product
+        print("First Time Loading Product.....")
+        await refresh_product_data(app)
         print("Product loaded successfully.")
     except Exception as e:
         print("Error loading product:", e)
-        app.state.product_data = []
     
     print("Startup complete.")
     yield

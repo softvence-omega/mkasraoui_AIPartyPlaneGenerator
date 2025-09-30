@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "cloudinary>=1.44.1",
     "fastapi>=0.117.1",
+    "fastapi-utilities>=0.3.1",
     "google>=3.0.0",
     "google-api-core>=2.25.1",
     "google-genai>=1.39.1",
