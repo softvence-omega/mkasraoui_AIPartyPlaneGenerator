@@ -11,7 +11,7 @@ from app.utils.helper import request_product
 from app.config import PRODUCT_API
 
 
-@repeat_every(seconds=3600, wait_first=True)  # Refresh every hour
+@repeat_every(seconds=3600, wait_first=False)  # Refresh every hour
 async def refresh_product_data(app : FastAPI):
     print("Refreshing product data...")
     try:
