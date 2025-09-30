@@ -71,14 +71,14 @@ async def t_shirt_generate(
             generated_design_url = cloudinary_file_upload(img_path)
             print("Image Generated")
 
-            await asyncio.sleep(2)
+
 
             print("Generating Mockup......")
             response_m = t_shirt.generate_shirt_mockup(img_path)
             generated_mockup_url = cloudinary_file_upload(response_data_img(response_m))
             print("Mockup Generated.")
 
-            await asyncio.sleep(1)
+
 
             background_task.add_task(delete_file, TEMP_FOLDER_NAME)
 
@@ -96,7 +96,7 @@ async def t_shirt_generate(
             generated_design_url = cloudinary_file_upload(img_path)
             print("Image Generated")
 
-            await asyncio.sleep(2)
+
 
             print("Generating Mockup......")
             response_m = t_shirt.generate_shirt_mockup(img_path)
