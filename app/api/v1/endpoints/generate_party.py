@@ -35,7 +35,7 @@ async def party_generate(party_input : PartyData, request : Request):
         ## Generate party plan
         print("Generating Party Plan.....")
         party_generated_response, gift_list = party_plan.generate_party_plan(party_data)
-        await asyncio.sleep(1)
+
 
         ## Suggest Gifts
         print("Suggesting Gifts.....")
