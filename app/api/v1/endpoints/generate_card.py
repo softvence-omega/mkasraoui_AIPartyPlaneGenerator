@@ -19,7 +19,6 @@ def generate_card(req: InvitationRequest):
 
         images_out = [ImageInfo(url=i["url"], public_id=i.get("public_id")) for i in images]
         return InvitationResponse(invitation_text=invitation_text, images=images_out)
-
     except Exception as e:
         # log / raise
         raise HTTPException(status_code=500, detail=str(e))

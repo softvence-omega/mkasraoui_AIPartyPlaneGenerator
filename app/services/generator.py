@@ -72,11 +72,16 @@ Generate a detailed design description for the card image based on these inputs.
     return system_prompt
 
 def generate_invitation_text(data: Dict) -> str:
+
     prompt_text = f"""
-Create a short and fun birthday invitation message in 10-15 words.
-Theme: {data.get('theme')}
-Person: {data.get('birthday_person_name')}, Age: {data.get('age')}
-"""
+    You are a creative and cheerful party planner AI.
+    Your task is to write short, fun, and exciting birthday invitation messages.
+    The messages should be 10-15 words, playful, and heartwarming.
+    Include emojis if appropriate and make each message feel personalized and lively.
+    Always aim for maximum excitement and fun in the wording.
+    Theme: {data.get('theme')}
+    Person: {data.get('birthday_person_name')}, Age: {data.get('age')}
+    """
     resp = GENAI_CLIENT.models.generate_content(
         model="gemini-2.5-pro",
         contents=[types.Part(text=prompt_text)]

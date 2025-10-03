@@ -25,7 +25,7 @@ BASE_DIR = os.getcwd()
 GENERATED_DIR = os.path.join(BASE_DIR, "generated_cards")
 os.makedirs(GENERATED_DIR, exist_ok=True)
 
-
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 ## cloudinary api key
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
@@ -133,7 +133,7 @@ PARTY_PLANNER_PROMPT = """
         "🛍️ Party Supplies": ["list of supplies"],
         "⏰ Party Timeline": ["timeline steps with emojis"],
         "🎁 Suggested Gifts": ["list of gift names only"],
-        "🌟 New Adventure Ideas": ["list of adventure/fun ideas"]
+        "🌟 New Adventure Ideas": ["list of adventure/fun ideas"],
         }}
     """
 
