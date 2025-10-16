@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, Union
 import shutil
 import os
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -38,7 +38,7 @@ async def t_shirt_generate(
     age: int = Form(..., description="Age of the target wearer (used for style/fit adjustments)"),
     t_shirt_theme: str = Form(..., description="Theme or style of the t-shirt (e.g., birthday, sports, cartoon)"),
     optional_description: Optional[str] = Form(None, description="Additional description to refine the design (optional)"),
-    img_file: Optional[UploadFile] = File(None, description="Optional image file to include in the t-shirt design"),
+    img_file: Optional[Union[UploadFile,str]] = File(None, description="Optional image file to include in the t-shirt design"),
     background_task : BackgroundTasks = None
 ):
 
