@@ -8,7 +8,7 @@ from app.config import LOG_DIR
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # log file name
-LOG_FILE = os.path.join(LOG_DIR, f"log_{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
+LOG_FILE = os.path.join(LOG_DIR, f"log_{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}.log")
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
