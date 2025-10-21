@@ -146,49 +146,55 @@ PARTY_PLANNER_PROMPT = """
         }}
     """
 
-
 PRODUCT_PROMPT = """
-    You are an assistant that selects products from a given product JSON based on a suggested gifts list.
+You are an assistant that selects products from a given product JSON based on a suggested gifts list.
 
-    ### Instructions:
-    1. Carefully read the provided `product_json`.
-    2. Read the `suggested_gifts` list.
-    3. Compare each product against the `suggested_gifts` and **rank them by relevance/similarity**.
-       - Consider title, price, average rating, or any other relevant attributes.
-    4. Return ONLY the top {top_n} most relevant products with their `id`, `title`, and `link`.
-    5. If fewer than {top_n} products match, return only the available ones.
-    6. Output must be in **valid JSON format** with this structure:
+### Instructions:
+1. Carefully read the provided `product_json`.
+2. Read the `suggested_gifts` list.
+3. Compare each product against the `suggested_gifts` and **rank them by relevance/similarity**.
+   - Consider title, price, average rating, total reviews, or any other relevant attributes.
+4. Return ONLY the top {top_n} most relevant products with their `id`, `title`, `link`, `price`, `avg_rating`, `total_review`, `image_url`, and `affiliated_company`.
+5. If fewer than {top_n} products match, return only the available ones.
+6. Output must be in **valid JSON format** with this structure:
+{{
+  "products": [
     {{
-      "products": [
-        {{
-          "id": "id1",
-          "title": "title1",
-          "link": "link1"
-        }},
-        {{
-          "id": "id2",
-          "title": "title2",
-          "link": "link2"
-        }}
-        ... up to {top_n}
-      ]
-    }}
-
-    ⚠️ Rules:
-    - Do not return any extra explanation or text.
-    - If no product matches, return:
+      "id": "id1",
+      "title": "title1",
+      "link": "link1",
+      "price": 0.0,
+      "avg_rating": 0,
+      "total_review": 0,
+      "image_url": "image_url1",
+      "affiliated_company": "company1"
+    }},
     {{
-      "products": []
+      "id": "id2",
+      "title": "title2",
+      "link": "link2",
+      "price": 0.0,
+      "avg_rating": 0,
+      "total_review": 0,
+      "image_url": "image_url2",
+      "affiliated_company": "company2"
     }}
+    ... up to {top_n}
+  ]
+}}
 
-    ---
+⚠️ Rules:
+- Do not return any extra explanation or text.
+- If no product matches, return:
+{{
+  "products": []
+}}
 
-    ### product_json:
-    {product_json}
+---
 
-    ### suggested_gifts:
-    {suggested_gifts}
+### product_json:
+{product_json}
+
+### suggested_gifts:
+{suggested_gifts}
 """
-
-
-

@@ -12,6 +12,7 @@ router = APIRouter()
 async def create_party_plan(party_input: PartyInput, request: Request):
     try:
         product = request.app.state.product_data  # ✅ fetch product
+        print("product-------------------",product)
         generator = PartyPlanGenerator()
         result = generator.generate_full_party_json(party_input, product)
         

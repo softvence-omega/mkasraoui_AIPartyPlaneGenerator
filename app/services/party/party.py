@@ -87,10 +87,14 @@ class PartyPlanGenerator:
                     ]
                 }
             ]
-
+            print("gift_prompt--------------------",gifts_prompt)
             logger.info("Generating detailed gift list...")
             client, config = self.model_client()
+            print("prompt--------------------",gifts_prompt)
             response = self._make_api_call(client, PRODUCT_MODEL, gifts_prompt, config)
+            
+            
+            print("api response--------------------------",response)
             raw_text = response.text.strip()
             gifts_json = json.loads(raw_text)
             return gifts_json
@@ -120,7 +124,7 @@ class PartyPlanGenerator:
         try:
             # 1️⃣ AI Party Plan
             party_json, suggested_gifts_list = self.generate_party_plan(party_input)
-            
+            print("gfparty--------------------",suggested_gifts_list)
            
             logger.info(f"Party Plan JSON: {party_json}")
             
@@ -146,6 +150,7 @@ class PartyPlanGenerator:
                 suggested_gifts=suggested_gifts_list,
                 top_n=len(suggested_gifts_list),
             )
+            print("giftjson---------------------",gifts_json)
             logger.info(f"Detailed Gifts JSON: {gifts_json}")
 
             

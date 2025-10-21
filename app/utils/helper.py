@@ -84,7 +84,9 @@ def filter_data(data, price):
             "title": item["title"],
             "price": item["price"],
             "avg_rating": item["avg_rating"],
-            "link": item["link"]
+            "link": item["link"],
+            "image_url": item["image_url"],
+            "affiliated_company": item["affiliated_company"]
         }
         for item in data["data"]["items"]
         if item["price"] <= price
