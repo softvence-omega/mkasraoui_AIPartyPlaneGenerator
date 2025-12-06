@@ -8,6 +8,7 @@ from app.api.v1.endpoints import generate_card
 from app.api.v1.endpoints import t_shirt_endpoint
 from app.api.v1.endpoints import generate_party
 from app.api.v1.endpoints import generate_aiMessage
+from app.api.v1.endpoints import recommendation
 from app.utils.helper import request_product 
 from app.config import PRODUCT_API
 
@@ -52,7 +53,7 @@ app.add_middleware(
 app.include_router(generate_aiMessage.router)
 app.include_router(generate_card.router)
 app.include_router(t_shirt_endpoint.router)
-
+app.include_router(recommendation.router)
 
 
 app.include_router(generate_party.router)

@@ -42,7 +42,7 @@ MODEL_NAME = "gemini-2.5-flash-image-preview"
 PRODUCT_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 1.0
 GENERATED_IMG_PATH = Path("data")
-PRODUCT_API = "https://api.mafetefacile.fr/affiliate-product"
+PRODUCT_API = os.getenv("PRODUCT_API", "https://example.com/api/products")
 
 # Prompt
 IMAGE_ANALYSIS_PROMPT = """

@@ -16,6 +16,9 @@ from app.config import GENAI_CLIENT, GENERATED_DIR
 # Build the same image prompt generator as in your notebook
 def build_image_prompt(data: Dict) -> str:
     prompt = f"A {data.get('theme', 'modern')} style birthday invitation card.\n"
+    # language for text on the card
+    lang = data.get("language", "en")
+    prompt += f"All textual elements on the card (greeting, name, details) should be in {lang}.\n"
     if data.get("description"):
         prompt += f"Theme description: {data['description']}\n"
     if data.get("age"):
@@ -82,6 +85,9 @@ Make it feel personalized for {data.get('birthday_person_name')}, turning {data.
 Theme: {data.get('theme')}
 Only **one line**, no lists.
 """
+    # instruct language for the generated message
+    lang = data.get("language", "en")
+    prompt_text = f"{prompt_text}\nPlease write the invitation message in {lang}."
     resp = GENAI_CLIENT.models.generate_content(
         model="gemini-2.5-pro",
         contents=[types.Part(text=prompt_text)]
