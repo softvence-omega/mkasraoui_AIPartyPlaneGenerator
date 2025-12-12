@@ -131,11 +131,35 @@ class PartyPlanGenerator:
             return []
 
     def generate_full_party_json(self, party_input: PartyInput, product: Union[dict, list]) -> Dict[str, Any]:
-        """Generate final structured party JSON for frontend."""
-        if isinstance(product, list):
+        """Generate final structured party JSON for frontend.
+
+        If product data is missing or empty, the function will still generate the
+        party plan and return an empty `suggested_gifts` list instead of raising
+        an error. This keeps the `/party_generate` route functional even when
+        product data failed to load at startup.
+        """
+        product_loaded = True
+        # Normalize product argument and handle empty states gracefully
+        if product is None:
+            logger.warning("No product object provided. Proceeding without product data.")
+            product_loaded = False
+        elif isinstance(product, list):
             if not product:
-                return {"error": "Product data is empty. Please load products first."}
-            product = product[0]  # safe now
+                logger.warning("Product list is empty. Proceeding without product data.")
+                product_loaded = False
+            else:
+                product = product[0]
+        elif isinstance(product, dict):
+            # If service assigned an empty dict or contains no items
+            data_items = None
+            try:
+                data_items = product.get("data", {}).get("items")
+            except Exception:
+                data_items = None
+
+            if not data_items:
+                logger.warning("Product dict contains no items. Proceeding without product data.")
+                product_loaded = False
         try:
             # 1️⃣ AI Party Plan
             party_json, suggested_gifts_list = self.generate_party_plan(party_input)
@@ -157,7 +181,7 @@ class PartyPlanGenerator:
                 age=party_input.person_age
             )
 
-            # 3️⃣ AI-Powered Gift Recommendations (20 products with fallback to random)
+            # 3️⃣ AI-Powered Gift Recommendations (6 products with fallback to random)
             gifts_recommendations = self.suggested_gifts(
                 party_input=party_input,
                 top_n=6
@@ -167,6 +191,10 @@ class PartyPlanGenerator:
 
             
             
+            # Ensure we always return an array for suggested gifts, even if empty
+            if not gifts_recommendations:
+                gifts_recommendations = []
+
             return {
                 "party_plan": new_party_ideas,
                 "suggested_gifts": gifts_recommendations,
