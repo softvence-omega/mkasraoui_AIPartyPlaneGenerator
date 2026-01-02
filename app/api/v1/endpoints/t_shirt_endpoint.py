@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, Union
 import shutil
 import os
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 from google.genai.errors import ServerError
 import asyncio
 
@@ -19,13 +19,23 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
+def _should_retry(exception):
+    from fastapi import HTTPException as FastAPIHTTPException
+    # Retry for server-side errors or gen.ai ServerError, but avoid retrying on client errors (4xx)
+    if isinstance(exception, FastAPIHTTPException):
+        return exception.status_code >= 500
+    if isinstance(exception, ServerError):
+        return True
+    return True
+
 @retry(
-    wait = wait_exponential(multiplier=1, min=4, max=10),
-    stop = stop_after_attempt(3),
-    retry = retry_if_exception_type(ServerError),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception(_should_retry),
     before_sleep=lambda retry_state: logger.info(
-        f"Retrying due to 500 error, attempt {retry_state.attempt_number}"
-    )
+        f"Retrying due to server error, attempt {retry_state.attempt_number}"
+    ),
+    reraise=True,
 )
 
 @router.post("/t_shirt_generate")
@@ -110,6 +120,3 @@ async def t_shirt_generate(
 
         except FileNotFoundError:
             raise HTTPException(status_code=400, detail = "File not found.")
-
-
-

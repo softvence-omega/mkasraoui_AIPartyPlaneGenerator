@@ -15,12 +15,12 @@ class PartyDetails(BaseModel):
     favorite_activities: List[str]
 
 class PartyInput(BaseModel):
-    person_name: str
-    person_age: int
-    budget: float = 1000
-    num_guests: int
-    party_date: str
-    location: str
+    person_name: str = Field(..., example="Prinom")
+    person_age: int = Field(..., example=7)
+    budget: float = Field(..., example=500)
+    num_guests: int = Field(..., example=20)
+    party_date: str = Field(..., example="2024-12-15")
+    location: str = Field(..., example="New York City")
     party_details: PartyDetails
 
 

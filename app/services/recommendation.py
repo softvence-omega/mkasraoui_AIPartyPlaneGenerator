@@ -2,9 +2,10 @@
 import requests
 import json
 import random
+import re
 from typing import List, Dict
 
-from app.config import PRODUCT_API, GENAI_CLIENT
+from app.config import PRODUCT_API, GENAI_CLIENT, PRODUCT_MODEL
 from google.genai import types
 
 
@@ -50,8 +51,8 @@ class RecommendationEngine:
         if not products:
             return []
         
-        # Create a mapping of product IDs to full product data for later retrieval
-        product_map = {p.get("id"): p for p in products}
+        # Create a mapping of product IDs (as strings) to full product data for later retrieval
+        product_map = {str(p.get("id")): p for p in products}
         
         # Prepare product catalog for the AI (limited fields for prompt)
         product_catalog = json.dumps([
@@ -91,38 +92,65 @@ Return ONLY the JSON array of product IDs, nothing else. Example format:
         
         try:
             response = GENAI_CLIENT.models.generate_content(
-                model="gemini-2.5-pro",
+                model= "gemini-2.5-flash",
                 contents=[types.Part(text=prompt)]
             )
-            
-            # Extract and parse the response
+
+            # Extract and parse the response robustly
             if response.candidates:
                 candidate = response.candidates[0]
+
+                # Concatenate all parts to form the full response text
+                candidate_text = ""
                 if candidate.content.parts:
                     for part in candidate.content.parts:
                         if hasattr(part, "text") and part.text:
-                            try:
-                                # Try to parse JSON from response
-                                text = part.text.strip()
-                                # Remove markdown code blocks if present
-                                if text.startswith("```"):
-                                    text = text.split("```")[1]
-                                    if text.startswith("json"):
-                                        text = text[4:]
-                                
-                                recommended_ids = json.loads(text)
-                                if isinstance(recommended_ids, list):
-                                    # Return full product objects from the map
-                                    recommendations = [
-                                        product_map[pid] for pid in recommended_ids
-                                        if pid in product_map
-                                    ]
-                                    return recommendations[:limit]
-                            except json.JSONDecodeError:
-                                pass
+                            candidate_text += part.text + "\n"
+                candidate_text = candidate_text.strip()
+                print("Raw AI response:", candidate_text)
+
+                # Try to extract a JSON array anywhere in the response using regex,
+                # fall back to parsing the whole text
+                try:
+                    # strip code fences if present
+                    if candidate_text.startswith("```"):
+                        inner = candidate_text.split("```", 2)[1]
+                        if inner.strip().lower().startswith("json"):
+                            candidate_text = inner.strip()[4:].strip()
+                        else:
+                            candidate_text = inner.strip()
+
+                    # find first JSON array in text
+                    match = re.search(r'\[.*?\]', candidate_text, re.S)
+                    if match:
+                        text = match.group(0)
+                    else:
+                        text = candidate_text
+
+                    recommended_ids = json.loads(text)
+
+                    # normalize to list of ids (strings)
+                    if isinstance(recommended_ids, list):
+                        normalized_ids = [str(x) for x in recommended_ids]
+
+                        # Return full product objects from the map (keys are strings)
+                        recommendations = [
+                            product_map[pid] for pid in normalized_ids if pid in product_map
+                        ]
+
+                        if recommendations:
+                            return recommendations[:limit]
+                        else:
+                            print("AI returned ids but none matched product catalog.")
+                except json.JSONDecodeError:
+                    print("Failed to parse JSON from AI response.")
+                except Exception as e:
+                    print("Unexpected error parsing AI response:", str(e))
         except Exception as e:
+            print("="*100)
             print(f"Error getting AI recommendations: {str(e)}")
         
+        print("No AI recommendations found or error occurred.")
         return []
     
     def recommend_products(
@@ -162,6 +190,10 @@ Return ONLY the JSON array of product IDs, nothing else. Example format:
             products=products,
             limit=limit
         )
+
+        print("-"*100)
+        print(ai_recommendations)
+        print("-"*100)
         
         has_random_fallback = False
         

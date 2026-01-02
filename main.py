@@ -42,13 +42,45 @@ async def lifespan(app: FastAPI):
     
 
 app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://api.mafetefacile.fr", 
+        "http://api.mafetefacile.fr",
+        "http://localhost:5173", 
+        "http://localhost:5174", 
+        "https://mafetefacile.fr", 
+        "http://mafetefacile.fr",
+        "https://ai.mafetefacile.fr/api/v1/generate-card",
+        "http://ai.mafetefacile.fr/api/v1/generate-card"
+    ],  # "*", যদি আপনি সব ডোমেইন অনুমোদন দিতে চান তবে মুছে দিন
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class CORSDebugMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin")
+        print(f"Request from origin: {origin}")
+        print(f"Request method: {request.method}")
+        print(f"Request path: {request.url.path}")
+        
+        response = await call_next(request)
+        
+        print(f"Response headers: {response.headers}")
+        return response
+
+# Add this BEFORE CORSMiddleware
+app.add_middleware(CORSDebugMiddleware)
+# app.add_middleware(CORSMiddleware, ...)
+
+
 
 app.include_router(generate_aiMessage.router)
 app.include_router(generate_card.router)

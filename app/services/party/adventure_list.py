@@ -7,7 +7,7 @@ load_dotenv(override=True)
 # Load API key
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # Set up logger
 
 # Initialize YouTube API client
 youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)

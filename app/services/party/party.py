@@ -3,6 +3,10 @@ from sympy import product
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from google.api_core.exceptions import ServiceUnavailable
 import json
+import time
+import os
+import threading
+import concurrent.futures
 from typing import List, Dict, Any, Union
 from app.config import PRODUCT_MODEL, GEMINI_API_KEY, PARTY_PLANNER_PROMPT, PRODUCT_PROMPT
 from app.utils.logger import get_logger
@@ -15,6 +19,37 @@ logger = get_logger(__name__)
 
 
 class PartyPlanGenerator:
+    # In-memory caches to avoid repeated slow external calls
+    _party_plan_cache = {}  # key -> (timestamp, (party_json, suggested_gifts))
+    _party_plan_cache_lock = threading.Lock()
+    _youtube_cache = {}  # key -> (timestamp, videos)
+    _youtube_cache_lock = threading.Lock()
+    PARTY_PLAN_CACHE_TTL = int(os.getenv("PARTY_PLAN_CACHE_TTL", "300"))  # seconds
+    YOUTUBE_CACHE_TTL = int(os.getenv("YOUTUBE_CACHE_TTL", "3600"))  # seconds
+
+    def _party_plan_cache_key(self, party_input: PartyInput) -> str:
+        """Create a stable cache key for a party input."""
+        key_data = {
+            "person_name": party_input.person_name,
+            "person_age": party_input.person_age,
+            "budget": party_input.budget,
+            "num_guests": party_input.num_guests,
+            "party_date": party_input.party_date,
+            "location": party_input.location,
+            "theme": getattr(party_input.party_details, "theme", party_input.party_details.get("theme") if isinstance(party_input.party_details, dict) else None),
+            "favorite_activities": getattr(party_input.party_details, "favorite_activities", party_input.party_details.get("favorite_activities") if isinstance(party_input.party_details, dict) else None)
+        }
+        return json.dumps(key_data, sort_keys=True, default=str)
+
+    def _timed_call(self, name: str, func, *args, **kwargs):
+        """Run func(*args, **kwargs) and log its duration. Returns func's result."""
+        start = time.perf_counter()
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            duration = time.perf_counter() - start
+            logger.info(f"Task '{name}' completed in {duration:.3f}s")
     @staticmethod
     def model_client():
         """Configure Gemini AI client."""
@@ -40,7 +75,15 @@ class PartyPlanGenerator:
         )
 
     def generate_party_plan(self, party_input: PartyInput):
-        """Generate party plan JSON using AI."""
+        """Generate party plan JSON using AI with caching to avoid repeated slow calls."""
+        key = self._party_plan_cache_key(party_input)
+        # Try cache first
+        with self._party_plan_cache_lock:
+            entry = self._party_plan_cache.get(key)
+            if entry and (time.time() - entry[0]) < self.PARTY_PLAN_CACHE_TTL:
+                logger.info("Returning cached party plan")
+                return entry[1]
+
         try:
             party_prompt = [
                 {
@@ -59,7 +102,7 @@ class PartyPlanGenerator:
                 }
             ]
 
-            logger.info("Generating party plan...")
+            logger.info("Generating party plan (API call)...")
             client, config = self.model_client()
             response = self._make_api_call(client, PRODUCT_MODEL, party_prompt, config)
             raw_text = response.text.strip()
@@ -67,6 +110,11 @@ class PartyPlanGenerator:
 
             # Extract suggested gifts
             suggested_gifts = party_json.get("🎁 Suggested Gifts", [])
+
+            # Store in cache
+            with self._party_plan_cache_lock:
+                self._party_plan_cache[key] = (time.time(), (party_json, suggested_gifts))
+
             return party_json, suggested_gifts
 
         except Exception as e:
@@ -75,6 +123,7 @@ class PartyPlanGenerator:
 
 
     def suggested_gifts(self, party_input: PartyInput, top_n: int = 20):
+        print("prinom")
         """
         Generate gift recommendations using AI-powered recommendation engine.
         Recommends top_n products based on party theme and activities.
@@ -109,7 +158,14 @@ class PartyPlanGenerator:
         
 
     def generate_youtube_links(self, theme: str, age: int) -> List[dict]:
-        """Fetch YouTube music/movie links for the party."""
+        """Fetch YouTube music/movie links for the party with simple caching."""
+        cache_key = f"yt:{theme}:{age}"
+        with self._youtube_cache_lock:
+            entry = self._youtube_cache.get(cache_key)
+            if entry and (time.time() - entry[0]) < self.YOUTUBE_CACHE_TTL:
+                logger.info("Returning cached YouTube results")
+                return entry[1]
+
         try:
             # Build a more specific query for better results
             query = f"{theme} party music songs for kids age {age}"
@@ -125,6 +181,10 @@ class PartyPlanGenerator:
                 videos = search_youtube_videos(fallback_query, max_results=5)
             
             logger.info(f"Found {len(videos)} YouTube videos")
+
+            with self._youtube_cache_lock:
+                self._youtube_cache[cache_key] = (time.time(), videos)
+
             return videos
         except Exception as e:
             logger.error(f"Error in generate_youtube_links: {e}")
@@ -161,12 +221,34 @@ class PartyPlanGenerator:
                 logger.warning("Product dict contains no items. Proceeding without product data.")
                 product_loaded = False
         try:
-            # 1️⃣ AI Party Plan
-            party_json, suggested_gifts_list = self.generate_party_plan(party_input)
-            # print("gfparty--------------------",suggested_gifts_list)
-           
+            # Run three potentially slow operations in parallel to reduce overall latency
+            logger.info("Starting parallel tasks: party plan, youtube links, gift recommendations")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {
+                    "party": executor.submit(self._timed_call, "party", self.generate_party_plan, party_input),
+                    "youtube": executor.submit(self._timed_call, "youtube", self.generate_youtube_links, party_input.party_details.theme, party_input.person_age),
+                    "gifts": executor.submit(self._timed_call, "gifts", self.suggested_gifts, party_input, 6),
+                }
+
+                results = {}
+                exceptions = {}
+
+                for name, fut in futures.items():
+                    try:
+                        results[name] = fut.result()
+                    except Exception as ex:
+                        logger.error(f"Parallel task {name} failed: {ex}")
+                        exceptions[name] = ex
+
+            # If party plan failed, propagate the error (it's core to response)
+            if "party" in exceptions:
+                logger.error("Party plan generation failed in parallel execution; re-raising exception")
+                raise exceptions["party"]
+
+            # Extract results with sensible defaults
+            party_json, suggested_gifts_list = results.get("party", ({}, []))
             logger.info(f"Party Plan JSON: {party_json}")
-            
+
             new_party_ideas = {
                 "🎨 Theme & Decorations": party_json.get("🎨 Theme & Decorations", []),
                 "🎉 Fun Activities": party_json.get("🎉 Fun Activities", []),
@@ -174,23 +256,12 @@ class PartyPlanGenerator:
                 "🛍️ Party Supplies": party_json.get("🛍️ Party Supplies", []),
                 "⏰ Party Timeline": party_json.get("⏰ Party Timeline", [])
             }
-            logger.info(f"Suggested Gifts List: {suggested_gifts_list}")
-            # 2️⃣ YouTube links
-            music_links = self.generate_youtube_links(
-                theme=party_input.party_details.theme,   # ✅ fixed
-                age=party_input.person_age
-            )
 
-            # 3️⃣ AI-Powered Gift Recommendations (6 products with fallback to random)
-            gifts_recommendations = self.suggested_gifts(
-                party_input=party_input,
-                top_n=6
-            )
-            # print("giftjson---------------------",gifts_recommendations)
+            music_links = results.get("youtube", []) or []
+            gifts_recommendations = results.get("gifts", []) or []
+
             logger.info(f"Detailed Gifts Recommendations: {gifts_recommendations}")
 
-            
-            
             # Ensure we always return an array for suggested gifts, even if empty
             if not gifts_recommendations:
                 gifts_recommendations = []
